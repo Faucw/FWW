@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>增删改查网页</title>
+    <meta charset="utf-8">
+    <style type="text/css">
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        input, select {
+            margin: 5px;
+            padding: 5px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: none;
+            box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+        }
+        textarea {
+            margin: 5px;
+            padding: 5px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: none;
+            box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+        }
+        button {
+            margin: 10px;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: none;
+            background-color: #007bff;
+            color: #fff;
+            box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+        img {
+            max-width: 500px;
+            max-height: 500px;
+            margin: 10px;
+            box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+        }
+        .count {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px;
+            padding: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #fff;
+            background-color: #007bff;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+        }
+        .items {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+        .item {
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            position: relative;
+        }
+        .delete-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: red;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            padding: 5px;
+        }
+        .search {
+            margin: 20px;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: none;
+            box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+            width: 300px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <input type="text" id="search" class="search" placeholder="搜索商品...">
+        <form id="itemForm" enctype="multipart/form-data">
+            <input type="text" id="name" placeholder="名称" required>
+            <input type="number" id="price" placeholder="价格" required>
+            <select id="category">
+                <option value="食品">食品</option>
+                <option value="饮品">饮品</option>
+                <option value="日用品">日用品</option>
+            </select>
+            <textarea id="description" placeholder="描述"></textarea>
+            <input type="file" id="image" accept="image/*" required>
+            <button type="submit">添加</button>
+        </form>
+        <hr>
+        <div class="items" id="itemsContainer">
+            <!-- 商品列表 -->
+        </div>
+        <div class="count">0</div>
+    </div>
+    <script type="text/javascript">
+        const form = document.getElementById('itemForm');
+        const itemsContainer = document.getElementById('itemsContainer');
+        const count = document.querySelector('.count');
+        const searchInput = document.getElementById('search');
+
+        let itemCount = 0;
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const name = document.getElementById('name').value;
+            const price = document.getElementById('price').value;
+            const category = document.getElementById('category').value;
+            const description = document.getElementById('description').value;
+            const image = document.getElementById('image').files[0];
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                addItem(name, price, category, description, e.target.result);
+                form.reset();
+            }
+            reader.readAsDataURL(image);
+        });
+
+        function addItem(name, price, category, description, imageUrl) {
+            const itemDiv = document.createElement('div');
+            itemDiv.classList.add('item');
+            itemDiv.setAttribute('data-name', name.toLowerCase());
+            itemDiv.setAttribute('data-category', category.toLowerCase());
+            itemDiv.setAttribute('data-description', description.toLowerCase());
+
+            const img = document.createElement('img');
+            img.src = imageUrl;
+            itemDiv.appendChild(img);
+
+            const namePara = document.createElement('p');
+            namePara.textContent = '名称: ' + name;
+            itemDiv.appendChild(namePara);
+
+            const pricePara = document.createElement('p');
+            pricePara.textContent = '价格: ' + price;
+            itemDiv.appendChild(pricePara);
+
+            const categoryPara = document.createElement('p');
+            categoryPara.textContent = '分类: ' + category;
+            itemDiv.appendChild(categoryPara);
+
+            const descriptionPara = document.createElement('p');
+            descriptionPara.textContent = '描述: ' + description;
+            itemDiv.appendChild(descriptionPara);
+
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = '删除';
+            deleteButton.classList.add('delete-button');
+            deleteButton.onclick = function() {
+                itemsContainer.removeChild(itemDiv);
+                itemCount--;
+                updateCount();
+            }
+            itemDiv.appendChild(deleteButton);
+
+            itemsContainer.appendChild(itemDiv);
+            itemCount++;
+            updateCount();
+        }
+
+        function updateCount() {
+            count.textContent = itemCount;
+        }
+
+        searchInput.addEventListener('input', function() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const items = document.querySelectorAll('.item');
+            items.forEach(function(item) {
+                const name = item.getAttribute('data-name');
+                const category = item.getAttribute('data-category');
+                const description = item.getAttribute('data-description');
+
+                if (name.includes(searchTerm) || category.includes(searchTerm) || description.includes(searchTerm)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
